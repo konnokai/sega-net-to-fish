@@ -93,7 +93,7 @@ function renderBind() {
   if (state.needsLogin) {
     ui.bindScopeWarning.textContent = state.scopeOk
       ? '登入已失效，請重新登入。'
-      : `目前的授權是「${state.grantedScope || '未知'}」，需要「${state.scope}」才能匯入。請重新登入。`;
+      : `授權範圍是「${state.grantedScope || '未知'}」，需要「${state.scope}」才能匯入。請重新登入。`;
   }
 }
 
@@ -140,7 +140,7 @@ function renderUnmatched(upload) {
           ? '無法分辨是哪一首'
           : '資料格式不對';
     const title = String(item.title || '').trim() || '(空白歌名)';
-    li.textContent = `${title} [${item.type}] ${diff} — ${reason}`;
+    li.textContent = `${title} [${item.type}] ${diff}：${reason}`;
     ui.unmatchedList.append(li);
   }
 
@@ -301,8 +301,8 @@ function handleAuthQuery() {
   const messages = {
     denied: '你拒絕了水魚授權。',
     state: '授權狀態不符，請再試一次。',
-    scope: '水魚應用尚未取得這個權限。寫入權限需要人工審核通過。',
-    config: '伺服器尚未設定水魚應用或 SESSION_SECRET。',
+    scope: '水魚應用還沒拿到這個權限。寫入權限要人工審核通過。',
+    config: '伺服器還沒設定水魚應用或 SESSION_SECRET。',
     error: '登入失敗，請再試一次。',
   };
   setNotice(ui.bindError, messages[auth] || '登入失敗，請再試一次。', true);

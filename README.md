@@ -6,19 +6,19 @@
 
 ## 怎麼運作
 
-1. 你在網站上用「水魚帳號登入」。流程是授權碼 + PKCE，`client_secret` 只放在 Worker。登入後網頁才會產生上傳碼。
-2. 你在 `maimaidx-eng.com` 點書籤。書籤讀五個難度的成績頁，把歌曲資料送到 Worker。
+1. 在網站上按「使用水魚帳號登入」。流程是授權碼 + PKCE，`client_secret` 只放在 Worker。登入後網頁才會產生上傳碼。
+2. 到 `maimaidx-eng.com` 點書籤。書籤讀五個難度的成績頁，把歌曲資料送到 Worker。
 3. Worker 拿水魚的歌曲資料比對，把可匯入的成績存進 Durable Object。
 4. 你按「匯入水魚」，Worker 用你的 access token 呼叫 `/player/update_records`。
 
 國際服的登入 cookie 只留在你的瀏覽器，Worker 只收到歌曲成績。
 
-水魚的 refresh token 存在 Durable Object。每次刷新都會換一組新的，同一個 DO 會排隊處理，避免併發刷新把整條令牌鏈弄斷。
+水魚的 refresh token 存在 Durable Object。每次刷新都會換一組新的；同一個 DO 會排隊處理，避免同時刷新把整串 token 弄壞。
 
 ## 目前限制
 
 - CHUNITHM 先不做。
-- 水魚的寫入權限要人工審核。還沒通過時，`prober.records.write` 的授權頁會拒絕，匯入不可能成功。
+- 水魚的寫入權限要人工審核。還沒通過時，`prober.records.write` 的授權頁會拒絕，匯入一定失敗。
 - 所有狀態放在同一個 Durable Object。這是給小工具用的簡化，流量大再拆。
 
 ## 本機開發
@@ -66,7 +66,7 @@
 
 用同一個網址開網站。redirect URI 是從 request 的 origin 組出來的，所以網址要跟控制台登記的完全一致。
 
-免費方案可以跑：這個專案用 `new_sqlite_classes`，免費方案的 Durable Object 只支援 SQLite 後端。要注意免費方案的 duration 上限是每日 13,000 GB-s，而一條開整天不關的 SSE 連線大約吃掉 10,800 GB-s（128 MB × 86,400 秒）。頁面用完就關，或改用付費方案。
+免費方案可以跑：這個專案用 `new_sqlite_classes`，免費方案的 Durable Object 只支援 SQLite 後端。免費方案的 duration 上限是每天 13,000 GB-s，一條開整天不關的 SSE 連線大約吃掉 10,800 GB-s（128 MB × 86,400 秒）。頁面用完就關，或改用付費方案。
 
 ## 常用指令
 
