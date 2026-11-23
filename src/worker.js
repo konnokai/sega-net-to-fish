@@ -36,6 +36,12 @@ function scopeOf(env) {
   return env.DF_SCOPE || 'prober.records.write';
 }
 
+// /oauth/userinfo 要有 openid 才給呼叫、有 profile 才回 preferred_username。
+function loginScope(env) {
+  const scopes = ['openid', 'profile', ...scopeOf(env).split(/\s+/)];
+  return [...new Set(scopes.filter(Boolean))].join(' ');
+}
+
 function allowedOrigins(env) {
   return new Set(
     (env.ALLOWED_ORIGINS || 'https://maimaidx-eng.com,https://maimaidx.jp')
@@ -237,6 +243,21 @@ async function musicIndex(env) {
   return musicCache.index;
 }
 
+async function fetchUsername(env, token) {
+  try {
+    const res = await fetch(`${authOrigin(env)}/oauth/userinfo`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) return '';
+    const data = await res.json();
+    return typeof data.preferred_username === 'string' ? data.preferred_username : '';
+  } catch {
+    // 拿不到名字不影響匯入，畫面上就不顯示名稱。
+    return '';
+  }
+}
+
 function statePayload(ui, env) {
   const scopeOk = hasScope(ui.info.scope, scopeOf(env));
   const needsLogin = ui.info.hasSession && (ui.info.needsLogin || !scopeOk);
@@ -244,6 +265,7 @@ function statePayload(ui, env) {
     loggedIn: ui.info.hasSession && !needsLogin,
     hasSession: ui.info.hasSession,
     needsLogin,
+    username: ui.info.username,
     scopeOk,
     scope: scopeOf(env),
     grantedScope: ui.info.scope || '',
@@ -321,7 +343,7 @@ async function handleLogin(request, env) {
     response_type: 'code',
     client_id: env.DF_CLIENT_ID,
     redirect_uri: redirectUri,
-    scope: scopeOf(env),
+    scope: loginScope(env),
     state,
     code_challenge: challenge,
     code_challenge_method: 'S256',
@@ -569,9 +591,15 @@ export class AppState extends DurableObject {
         access_token TEXT,
         access_expires_at INTEGER NOT NULL DEFAULT 0,
         needs_login INTEGER NOT NULL DEFAULT 0,
+        username TEXT NOT NULL DEFAULT '',
         created_at INTEGER NOT NULL
       )
     `);
+    // 既有部署的 sessions 表沒有 username，加一次就好。
+    const columns = this.sql.exec('PRAGMA table_info(sessions)').toArray();
+    if (!columns.some((column) => column.name === 'username')) {
+      this.sql.exec("ALTER TABLE sessions ADD COLUMN username TEXT NOT NULL DEFAULT ''");
+    }
     this.sql.exec(`
       CREATE TABLE IF NOT EXISTS codes (
         code TEXT PRIMARY KEY,
@@ -617,6 +645,7 @@ export class AppState extends DurableObject {
     }
 
     const now = Date.now();
+    const accessToken = String(data.access_token || '');
     this.sql.exec(
       `INSERT INTO sessions
         (id, scope, refresh_token, access_token, access_expires_at, needs_login, created_at)
@@ -630,10 +659,14 @@ export class AppState extends DurableObject {
       sessionId,
       String(data.scope || ''),
       String(data.refresh_token || ''),
-      String(data.access_token || ''),
+      accessToken,
       now + (Number(data.expires_in) || 900) * 1000,
       now,
     );
+
+    // 名稱另外抓。重新登入換帳號時舊名稱一定清掉，寧可空白也不要顯示上一個帳號。
+    const username = await fetchUsername(this.env, accessToken);
+    this.sql.exec('UPDATE sessions SET username = ? WHERE id = ?', username, sessionId);
 
     this.#broadcast(sessionId);
     return { ok: true, scope: String(data.scope || '') };
@@ -641,13 +674,17 @@ export class AppState extends DurableObject {
 
   getSessionInfo(sessionId) {
     const row = this.sql
-      .exec('SELECT scope, refresh_token, needs_login FROM sessions WHERE id = ?', sessionId)
+      .exec(
+        'SELECT scope, refresh_token, needs_login, username FROM sessions WHERE id = ?',
+        sessionId,
+      )
       .toArray()[0];
-    if (!row) return { hasSession: false, scope: '', needsLogin: false };
+    if (!row) return { hasSession: false, scope: '', needsLogin: false, username: '' };
     return {
       hasSession: Boolean(row.refresh_token),
       scope: row.scope || '',
       needsLogin: Boolean(row.needs_login) || !row.refresh_token,
+      username: row.username || '',
     };
   }
 

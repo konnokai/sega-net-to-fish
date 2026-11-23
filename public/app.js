@@ -6,6 +6,7 @@ const ui = {
   bindState: $('bind-state'),
   bindLoggedOut: $('bind-logged-out'),
   bindLoggedIn: $('bind-logged-in'),
+  bindAccount: $('bind-account'),
   bindGranted: $('bind-granted'),
   bindScopeWarning: $('bind-scope-warning'),
   bindError: $('bind-error'),
@@ -31,6 +32,7 @@ let state = {
   loggedIn: false,
   hasSession: false,
   needsLogin: false,
+  username: '',
   grantedScope: '',
   scopeOk: true,
   clientConfigured: true,
@@ -86,6 +88,7 @@ function renderBind() {
 
   ui.bindLoggedOut.hidden = loggedIn;
   ui.bindLoggedIn.hidden = !loggedIn;
+  ui.bindAccount.textContent = state.username ? `已登入：${state.username}` : '已登入。';
   ui.bindGranted.textContent =
     loggedIn && state.grantedScope ? `（授權範圍：${state.grantedScope}）` : '';
 
@@ -301,7 +304,7 @@ function handleAuthQuery() {
   const messages = {
     denied: '你拒絕了水魚授權。',
     state: '授權狀態不符，請再試一次。',
-    scope: '水魚應用還沒拿到這個權限。寫入權限要人工審核通過。',
+    scope: '水魚應用沒有這個權限，請到開發者控制台確認申請的 scope（寫入權限要人工審核）。',
     config: '伺服器還沒設定水魚應用或 SESSION_SECRET。',
     error: '登入失敗，請再試一次。',
   };

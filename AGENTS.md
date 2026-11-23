@@ -31,7 +31,7 @@
 
 - 沒有 `.dev.vars` 也能 `npm run dev`，但 `/api/state` 會回 `clientConfigured:false`，`/api/upload-code`、`/api/import`、`/api/events` 都 503，`/api/login` 跳 `?auth=config`。看到 503 先確認檔案在不在。
 - 儲存只有三種：瀏覽器 cookie、Durable Object、Worker isolate 的記憶體快取（歌曲索引 1 小時）。沒有 D1、KV、R2。
-- 登入後跳 `?auth=scope`，或匯入被水魚拒絕，可能是 `prober.records.write` 的人工審核還沒過，不是程式錯。
+- 登入後跳 `?auth=scope`，或匯入被水魚拒絕，可能是 `prober.records.write` 的人工審核還沒過，不是程式錯。另一個可能是控制台沒開 `openid profile`（只用來讀使用者名稱）。水魚收到沒申請的 scope 是直接拒絕還是默默略過，還沒實測。
 - 所有 session、上傳碼、上傳結果都在同一個 DO。refresh token 輪替靠 DO 序列化，不要把換票搬出 DO。
 - DO 改狀態後要 `#broadcast(sessionId)`；前端只有 `/api/events` 的 SSE，沒有輪詢。漏推畫面就不會更新。
 - 上傳碼要登入後才產生。前端用 `/api/state` 的 `hasSession` 判斷，不要改回載入就自動打 `/api/upload-code`。

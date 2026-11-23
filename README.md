@@ -6,7 +6,7 @@
 
 ## 怎麼運作
 
-1. 在網站上按「使用水魚帳號登入」。流程是授權碼 + PKCE，`client_secret` 只放在 Worker。登入後網頁才會產生上傳碼。
+1. 在網站上按「使用水魚帳號登入」。流程是授權碼 + PKCE，`client_secret` 只放在 Worker。登入後網頁會顯示水魚使用者名稱，讓你確認登入的帳號對不對；上傳碼也要登入後才會產生。
 2. 到 `maimaidx-eng.com` 點書籤。書籤讀五個難度的成績頁，把歌曲資料送到 Worker。
 3. Worker 拿水魚的歌曲資料比對，把可匯入的成績存進 Durable Object。
 4. 你按「匯入水魚」，Worker 用你的 access token 呼叫 `/player/update_records`。
@@ -28,7 +28,7 @@
 1. 到 <https://auth.diving-fish.com/console> 登記應用：
    - 部署形態：由你自己部署運行（機密客戶端）
    - 回調地址：`http://127.0.0.1:8787/callback`
-   - 權限：`prober.records.write`
+   - 權限：`openid profile prober.records.write`（`openid profile` 只用來讀使用者名稱）
    - 登記完再產生 `client_secret`
 2. `npm install`
 3. 複製 `.dev.vars.example` 成 `.dev.vars`，填入：
@@ -77,7 +77,7 @@
 ## 資料放哪裡
 
 - 瀏覽器：`df_session`（簽章過的 session id）、`df_login`（PKCE 的 state / verifier，10 分鐘）。
-- Durable Object：session（含 refresh token）、上傳碼（15 分鐘）、最近一次上傳（1 小時）。
+- Durable Object：session（含 refresh token 與水魚使用者名稱）、上傳碼（15 分鐘）、最近一次上傳（1 小時）。
 - Worker 記憶體：`music_data` 快取 1 小時，每個 isolate 各自一份。
 - 沒有用 D1、KV、R2。
 
@@ -91,6 +91,7 @@ SSE 連線開著期間，Durable Object 會一直被算作活躍（大約每 20 
 
 ## 已知行為
 
+- 使用者名稱只在登入當下向 `/oauth/userinfo` 讀一次並存進 session。這次更新前就登入的 session 沒有名稱，重新登入才會出現。
 - 同名的 `Link` 與 `Link(CoF)` 用 DX 分數上限分辨。
 - 國際服限定曲、水魚沒有的歌會列在「查無歌曲」，匯入時跳過。
 - 國際服的成績頁一次就包含該難度全部歌曲，不用翻頁。
