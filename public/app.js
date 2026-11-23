@@ -12,6 +12,7 @@ const ui = {
   logout: $('logout'),
   bookmarklet: $('bookmarklet'),
   uploadCode: $('upload-code'),
+  newCode: $('new-code'),
   codeHint: $('code-hint'),
   importEmpty: $('import-empty'),
   importReady: $('import-ready'),
@@ -28,6 +29,7 @@ const ui = {
 
 let state = {
   loggedIn: false,
+  hasSession: false,
   needsLogin: false,
   grantedScope: '',
   scopeOk: true,
@@ -98,6 +100,13 @@ function renderBind() {
 function renderCode() {
   clearTimeout(codeTimer);
   ui.bookmarklet.setAttribute('href', state.bookmarklet || '#');
+  ui.newCode.disabled = !state.hasSession;
+
+  if (!state.hasSession) {
+    ui.uploadCode.textContent = '--------';
+    ui.codeHint.textContent = '登入後才會產生上傳碼。';
+    return;
+  }
 
   if (state.code && state.code.expiresAt > Date.now()) {
     ui.uploadCode.textContent = state.code.value;
@@ -203,6 +212,7 @@ async function refresh() {
 }
 
 async function maybeCreateCode() {
+  if (!state.hasSession) return;
   if (state.code || state.upload || codeBusy || codeAttempted) return;
   codeAttempted = true;
   await newCode();
@@ -210,6 +220,10 @@ async function maybeCreateCode() {
 
 async function newCode() {
   if (codeBusy) return;
+  if (!state.hasSession) {
+    ui.codeHint.textContent = '登入後才會產生上傳碼。';
+    return;
+  }
   codeBusy = true;
   try {
     const data = await api('/api/upload-code', { method: 'POST' });

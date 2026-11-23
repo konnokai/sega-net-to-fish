@@ -242,6 +242,7 @@ function statePayload(ui, env) {
   const needsLogin = ui.info.hasSession && (ui.info.needsLogin || !scopeOk);
   return {
     loggedIn: ui.info.hasSession && !needsLogin,
+    hasSession: ui.info.hasSession,
     needsLogin,
     scopeOk,
     scope: scopeOf(env),
@@ -361,7 +362,12 @@ async function handleUploadCode(request, env) {
   if (!configured(env)) return json({ error: '伺服器尚未設定水魚應用' }, 503, headers);
 
   const id = await sessionId(request, env, headers);
-  const result = await appState(env).createCode(id);
+  const app = appState(env);
+  const info = await app.getSessionInfo(id);
+  if (!info.hasSession) return json({ error: '請先登入水魚帳號' }, 401, headers);
+  if (info.needsLogin) return json({ error: '登入已失效，請重新登入' }, 401, headers);
+
+  const result = await app.createCode(id);
   return json(
     {
       code: formatCode(result.code),
