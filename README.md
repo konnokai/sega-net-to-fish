@@ -6,7 +6,7 @@
 
 ## 怎麼運作
 
-1. 你在網站上用「水魚帳號登入」。流程是授權碼 + PKCE，`client_secret` 只放在 Worker。
+1. 你在網站上用「水魚帳號登入」。流程是授權碼 + PKCE，`client_secret` 只放在 Worker。登入後網頁才會產生上傳碼。
 2. 你在 `maimaidx-eng.com` 點書籤。書籤讀五個難度的成績頁，把歌曲資料送到 Worker。
 3. Worker 拿水魚的歌曲資料比對，把可匯入的成績存進 Durable Object。
 4. 你按「匯入水魚」，Worker 用你的 access token 呼叫 `/player/update_records`。
@@ -44,20 +44,27 @@
 
 ## 部署到 Cloudflare Workers
 
-1. `npx wrangler login`
-2. `npm run deploy`
-3. 設定 secrets：
+這個 repo 跟 Cloudflare Workers Builds 綁定：**push 到 `main` 就會自動部署**，不用手動下指令。不要用 push 當預覽。
+
+環境設定（只做一次）：
+
+1. 在 Cloudflare dashboard 把 Worker 接到 GitHub repo。用別人的 fork 要自己接一次。
+2. 設定 secrets，用 dashboard（Settings → Variables and Secrets）或本機：
 
    ```
    npx wrangler secret put DF_CLIENT_SECRET
    npx wrangler secret put SESSION_SECRET
    ```
 
-4. 把部署後的 `/callback` 加回水魚控制台，例如
+3. 把 `/callback` 填到水魚控制台。目前是
+   `https://net-to-df.konnokai.me/callback`；用 workers.dev 的話是
    `https://<worker>.<subdomain>.workers.dev/callback`。
-5. 用同一個網址開網站。redirect URI 是從 request 的 origin 組出來的，所以網址要跟控制台登記的完全一致。
 
 第一次部署會自動建立 Durable Object（migration `v1`）。
+
+手動部署只在自動部署壞掉或臨時測試時用：`npx wrangler login`，再 `npm run deploy`。
+
+用同一個網址開網站。redirect URI 是從 request 的 origin 組出來的，所以網址要跟控制台登記的完全一致。
 
 免費方案可以跑：這個專案用 `new_sqlite_classes`，免費方案的 Durable Object 只支援 SQLite 後端。要注意免費方案的 duration 上限是每日 13,000 GB-s，而一條開整天不關的 SSE 連線大約吃掉 10,800 GB-s（128 MB × 86,400 秒）。頁面用完就關，或改用付費方案。
 
@@ -65,7 +72,7 @@
 
 - `npm run dev`：本機 Worker + 本機 Durable Object
 - `npm test`：測 `lib/core.mjs` 的歌曲比對與成績轉換
-- `npm run deploy`：部署到 Cloudflare
+- `npm run deploy`：手動部署。平常 push 到 `main` 就會自動部署。
 
 ## 資料放哪裡
 
