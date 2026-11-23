@@ -1,0 +1,9 @@
+# 水魚開發者控制台建立的應用
+DF_CLIENT_SECRET=
+
+# 簽 cookie / PKCE 用的密鑰，至少 32 bytes 隨機值
+SESSION_SECRET=
+
+# 本機想先測登入流程時可以蓋掉 wrangler.jsonc 的 scope；
+# 正式設定維持 prober.records.write。
+# DF_SCOPE=profile

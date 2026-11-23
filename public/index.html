@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>國際服成績 → 水魚查分器</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead">
+        <p class="eyebrow">sega net → diving-fish</p>
+        <h1>把國際服成績<br />送進水魚查分器</h1>
+      </header>
+
+      <div id="config-warning" class="notice notice-warn" hidden>
+        伺服器尚未設定水魚應用或 <code>SESSION_SECRET</code>，登入功能目前不可用。
+      </div>
+
+      <ol class="steps">
+        <li class="step" id="step-bind">
+          <div class="step-head">
+            <span class="num">01</span>
+            <h2>登入水魚帳號</h2>
+            <span class="state" id="bind-state">未登入</span>
+          </div>
+
+          <p id="bind-scope-warning" class="notice notice-warn" hidden></p>
+
+          <div id="bind-logged-out">
+            <div class="toolbar">
+              <a class="btn" href="/api/login">使用水魚帳號登入</a>
+            </div>
+          </div>
+
+          <div id="bind-logged-in" hidden>
+            <p class="body">已登入。<span class="muted" id="bind-granted"></span></p>
+            <div class="toolbar">
+              <a class="btn btn-secondary" href="/api/login">重新登入</a>
+              <button type="button" class="link" id="logout">登出</button>
+            </div>
+          </div>
+
+          <div id="bind-error" class="notice notice-warn" hidden></div>
+        </li>
+
+        <li class="step" id="step-upload">
+          <div class="step-head">
+            <span class="num">02</span>
+            <h2>從國際服抓成績</h2>
+          </div>
+          <p class="body">
+            先登入 <a href="https://maimaidx-eng.com/maimai-mobile/record/musicGenre/search/?genre=99&amp;diff=3" target="_blank" rel="noopener">maimaidx-eng.com</a>，把「抓取成績」拖到書籤列。在成績頁點書籤，輸入下面的上傳碼。
+          </p>
+
+          <div class="toolbar">
+            <a class="bookmarklet" id="bookmarklet" href="#" draggable="true">抓取成績</a>
+            <button type="button" class="btn btn-secondary" id="copy-bookmarklet">複製書籤</button>
+          </div>
+
+          <div class="code-row">
+            <span class="label">上傳碼</span>
+            <code class="code code-inline" id="upload-code">--------</code>
+            <button type="button" class="link" id="new-code">重新產生</button>
+          </div>
+          <p class="hint" id="code-hint" aria-live="polite">正在產生…</p>
+        </li>
+
+        <li class="step" id="step-import">
+          <div class="step-head">
+            <span class="num">03</span>
+            <h2>匯入水魚</h2>
+          </div>
+
+          <div id="import-empty">
+            <p class="body muted">等書籤把成績送進來。</p>
+          </div>
+
+          <div id="import-ready" hidden>
+            <div class="stats">
+              <div><strong id="stat-total">0</strong><span>收到</span></div>
+              <div><strong id="stat-resolved">0</strong><span>可匯入</span></div>
+              <div><strong id="stat-unmatched">0</strong><span>查無歌曲</span></div>
+            </div>
+
+            <details id="unmatched-box" hidden>
+              <summary>查無歌曲 <span id="unmatched-count"></span> 筆</summary>
+              <ul id="unmatched-list"></ul>
+            </details>
+
+            <div class="toolbar">
+              <button type="button" class="btn" id="import-btn">匯入水魚</button>
+            </div>
+            <div id="import-result" class="notice" hidden aria-live="polite"></div>
+          </div>
+        </li>
+      </ol>
+
+      <footer class="foot">
+        <span id="scope-label"></span>
+      </footer>
+    </main>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

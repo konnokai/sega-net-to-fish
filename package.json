@@ -1,0 +1,18 @@
+{
+  "name": "sega-net-to-fish",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "把 SEGA 國際版成績站台的成績匯入水魚查分器",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test test/"
+  },
+  "devDependencies": {
+    "wrangler": "^4.166.0"
+  },
+  "engines": {
+    "node": ">=20.12"
+  }
+}

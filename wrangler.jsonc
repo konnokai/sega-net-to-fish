@@ -1,0 +1,37 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sega-net-to-fish",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "APP_STATE",
+        "class_name": "AppState"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["AppState"]
+    }
+  ],
+  "vars": {
+    "DF_CLIENT_ID": "80279c67b7fa3bce4b18fea545c5deb8",
+    "DF_SCOPE": "prober.records.write",
+    "DF_AUTH_ORIGIN": "https://auth.diving-fish.com",
+    "DF_PROBER_ORIGIN": "https://www.diving-fish.com/api/maimaidxprober",
+    "ALLOWED_ORIGINS": "https://maimaidx-eng.com,https://maimaidx.jp"
+  },
+  "dev": {
+    "port": 8787
+  },
+  "observability": {
+    "enabled": true
+  }
+}
