@@ -59,6 +59,8 @@
 
 第一次部署會自動建立 Durable Object（migration `v1`）。
 
+免費方案可以跑：這個專案用 `new_sqlite_classes`，免費方案的 Durable Object 只支援 SQLite 後端。要注意免費方案的 duration 上限是每日 13,000 GB-s，而一條開整天不關的 SSE 連線大約吃掉 10,800 GB-s（128 MB × 86,400 秒）。頁面用完就關，或改用付費方案。
+
 ## 常用指令
 
 - `npm run dev`：本機 Worker + 本機 Durable Object
